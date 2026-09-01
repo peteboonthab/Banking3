@@ -2,8 +2,8 @@
   "ExpandedNodes": [
     "",
     "\\Banking3",
-    "\\ledger"
+    "\\ledger",
+    "\\ledger\\templates"
   ],
-  "SelectedNode": "\\ledger\\models.py",
   "PreviewInSolutionExplorer": false
 }

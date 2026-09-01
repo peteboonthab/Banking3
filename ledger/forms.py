@@ -5,32 +5,31 @@ from .models import LedgerEntry
 class LedgerEntryForm(forms.ModelForm):
     class Meta:
         model = LedgerEntry
-        fields = ['account', 'inflow', 'outflow']
+        fields = ['account', 'to_account', 'outflow']
 
     def clean(self):
         cleaned_data = super().clean()
 
         account = cleaned_data.get('account')
-        inflow = cleaned_data.get('inflow') or 0
+        to_account = cleaned_data.get('to_account')
         outflow = cleaned_data.get('outflow') or 0
 
-        # Cannot have both
-        if inflow > 0 and outflow > 0:
+        # Cannot send to yourself
+        if account and to_account and account == to_account:
             raise forms.ValidationError(
-                "A transaction cannot have both inflow and outflow."
+                "You cannot send money to the same account."
             )
 
-        # Must enter something
-        if inflow == 0 and outflow == 0:
+        # Must enter an amount
+        if outflow <= 0:
             raise forms.ValidationError(
-                "Enter an inflow or an outflow."
+                "Enter an amount greater than 0."
             )
 
         # Check withdrawal
-        if account and outflow > 0:
-            if outflow > account.balance:
-                raise forms.ValidationError(
-                    "Withdrawal cannot be greater than the account balance."
-                )
+        if account and outflow > account.balance:
+            raise forms.ValidationError(
+                "Withdrawal cannot be greater than the account balance."
+            )
 
         return cleaned_data

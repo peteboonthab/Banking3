@@ -1,0 +1,125 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Card</title>
+
+    <script src="https://js.stripe.com/v3/"></script>
+
+    <style>
+        #card-element {
+            border: 1px solid #999;
+            padding: 12px;
+            width: 400px;
+            max-width: 90%;
+            background: white;
+        }
+
+        #card-errors {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Add Card</h1>
+
+    <form id="card-form">
+
+        <label>Account:</label>
+
+        <select id="account">
+            {% for account in accounts %}
+                <option value="{{ account.id }}">
+                    {{ account.name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <br><br>
+
+        <label>Card details:</label>
+
+        <div id="card-element"></div>
+
+        <p id="card-errors"></p>
+
+        <br>
+
+        <button type="submit">Add Card</button>
+
+    </form>
+
+    <script>
+        const stripe = Stripe(
+            "{{ stripe_publishable_key }}"
+        );
+
+        const elements = stripe.elements();
+
+        const card = elements.create("card");
+
+        card.mount("#card-element");
+
+        card.on("change", function(event) {
+            const displayError =
+                document.getElementById("card-errors");
+
+            if (event.error) {
+                displayError.textContent = event.error.message;
+            } else {
+                displayError.textContent = "";
+            }
+        });
+
+        const form = document.getElementById("card-form");
+
+        form.addEventListener("submit", async (event) => {
+
+            event.preventDefault();
+
+            const { paymentMethod, error } =
+                await stripe.createPaymentMethod({
+                    type: "card",
+                    card: card
+                });
+
+            if (error) {
+                document.getElementById("card-errors").textContent =
+                    error.message;
+
+                return;
+            }
+
+            const accountId =
+                document.getElementById("account").value;
+
+            const response = await fetch(
+                "{% url 'save_card' %}",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    },
+
+                    body: JSON.stringify({
+                        account_id: accountId,
+                        payment_method_id: paymentMethod.id
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert("Card tokenized successfully!");
+            } else {
+                alert(data.error);
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -10,6 +10,12 @@ class Account(models.Model):
         decimal_places=2,
         default=0
     )
+    payment_method_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
 
 
     def __str__(self):
@@ -26,6 +32,13 @@ class LedgerEntry(models.Model):
         unique=True,
         editable=False
         )
+    to_account = models.ForeignKey(
+    Account,
+    on_delete=models.PROTECT,
+    related_name='received_entries',
+    null=True,
+    blank=True
+)
     def __str__(self):
         return self.account.name
 

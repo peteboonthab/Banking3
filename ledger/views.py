@@ -1,7 +1,10 @@
-from django.shortcuts import render, redirect
 from .forms import LedgerEntryForm
 from .models import Account, LedgerEntry
-from django.db import transaction 
+from django.db import transaction
+import json
+from django.http import JsonResponse
+from django.conf import settings
+from django.shortcuts import render, redirect
 
 
 def home(request):
@@ -10,7 +13,6 @@ def home(request):
     return render(request, 'ledger/home.html', {
         'accounts': accounts
     })
-
 
 
 def create_entry(request):
@@ -22,17 +24,24 @@ def create_entry(request):
 
                 entry = form.save()
 
-                account = Account.objects.select_for_update().get(
+                sender = Account.objects.select_for_update().get(
                     id=entry.account.id
                 )
 
-                if entry.inflow > 0:
-                    account.balance += entry.inflow
+                receiver = Account.objects.select_for_update().get(
+                    id=entry.to_account.id
+                )
 
-                elif entry.outflow > 0:
-                    account.balance -= entry.outflow
+                sender.balance -= entry.outflow
+                receiver.balance += entry.outflow
 
-                account.save()
+                sender.save()
+                receiver.save()
+
+                LedgerEntry.objects.create(
+                    account=receiver,
+                    inflow=entry.outflow
+                )
 
             return redirect('home')
 
@@ -46,15 +55,46 @@ def create_entry(request):
 
 def account_detail(request, account_id):
     account = Account.objects.get(id=account_id)
-    #find the account using ID
 
     entries = LedgerEntry.objects.filter(
         account=account
     ).order_by('-created_at')
-    #find transactino belong to that account and sorted them by date
 
     return render(request, 'ledger/account_detail.html', {
         'account': account,
         'entries': entries
-        #Show the transaction to the user
     })
+
+def add_card(request):
+    accounts = Account.objects.all()
+
+    return render(request, 'add_card.html', {
+        'accounts': accounts,
+        'stripe_publishable_key': settings.STRIPE_PUBLISHABLE_KEY,
+    })
+
+def save_card(request):
+    if request.method != 'POST':
+        return JsonResponse(
+            {'error': 'Invalid request'},
+            status=400
+        )
+
+    data = json.loads(request.body)
+
+    account_id = data.get('account_id')
+    payment_method_id = data.get('payment_method_id')
+
+    try:
+        account = Account.objects.get(id=account_id)
+
+        account.stripe_payment_method_id = payment_method_id
+        account.save()
+
+        return JsonResponse({'success': True})
+
+    except Account.DoesNotExist:
+        return JsonResponse(
+            {'error': 'Account not found'},
+            status=404
+        )
