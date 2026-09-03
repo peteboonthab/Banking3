@@ -5,6 +5,7 @@ import json
 from django.http import JsonResponse
 from django.conf import settings
 from django.shortcuts import render, redirect
+from .audit import create_audit_log
 
 
 def home(request):
@@ -41,6 +42,18 @@ def create_entry(request):
                 LedgerEntry.objects.create(
                     account=receiver,
                     inflow=entry.outflow
+                )
+
+                create_audit_log(
+                    request=request,
+                    action='TRANSFER',
+                    object_type='LedgerEntry',
+                    object_id=entry.id,
+                    details={
+                        'from_account': sender.id,
+                        'to_account': receiver.id,
+                        'amount': str(entry.outflow),
+                    }
                 )
 
             return redirect('home')

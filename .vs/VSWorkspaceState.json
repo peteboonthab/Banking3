@@ -3,7 +3,8 @@
     "",
     "\\Banking3",
     "\\ledger",
-    "\\ledger\\templates"
+    "\\ledger\\migrations",
+    "\\ledger\\__pycache__"
   ],
   "PreviewInSolutionExplorer": false
 }
