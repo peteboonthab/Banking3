@@ -75,4 +75,14 @@ class LedgerEntry(models.Model):
     def __str__(self):
         return self.account.name
 
+
+class LedgerEntryAudit(models.Model):
+    ledger_entry_id = models.IntegerField()
+    activity = models.CharField(max_length=10)
+    recorded_at = models.DateTimeField()
+
+    def __str__(self):
+        return self.activity
+
+
 # Create your models here.
