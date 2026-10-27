@@ -85,4 +85,14 @@ class LedgerEntryAudit(models.Model):
         return self.activity
 
 
+class MerkleCheckpoint(models.Model):
+    root_hash = models.CharField(max_length=64)
+    record_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Merkle checkpoint - {self.created_at}"
+
+
+
 # Create your models here.

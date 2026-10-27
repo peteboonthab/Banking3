@@ -52,7 +52,7 @@
 
     <script>
         const stripe = Stripe(
-            "{{ stripe_publishable_key }}"
+         "{{ stripe_publishable_key|escapejs }}"
         );
 
         const elements = stripe.elements();

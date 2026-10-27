@@ -2,9 +2,8 @@
   "ExpandedNodes": [
     "",
     "\\Banking3",
-    "\\ledger",
-    "\\ledger\\migrations",
-    "\\ledger\\__pycache__"
+    "\\Banking3\\__pycache__",
+    "\\ledger"
   ],
   "PreviewInSolutionExplorer": false
 }
