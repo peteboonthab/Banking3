@@ -3,7 +3,9 @@
     "",
     "\\Banking3",
     "\\Banking3\\__pycache__",
-    "\\ledger"
+    "\\ledger",
+    "\\ledger\\Management",
+    "\\ledger\\Management\\commands"
   ],
   "PreviewInSolutionExplorer": false
 }

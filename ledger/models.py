@@ -57,24 +57,49 @@ class Account(models.Model):
 
 class LedgerEntry(models.Model):
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
-    outflow = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    inflow = models.DecimalField(max_digits=12, decimal_places=2, default=0) 
+
+    outflow = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
+    inflow = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
+
     idempotency_key = models.UUIDField(
         default=uuid.uuid4,
         unique=True,
         editable=False
-        )
+    )
+
     to_account = models.ForeignKey(
-    Account,
-    on_delete=models.PROTECT,
-    related_name='received_entries',
-    null=True,
-    blank=True
-)
+        Account,
+        on_delete=models.PROTECT,
+        related_name='received_entries',
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(outflow__gte=0),
+                name="ledger_outflow_non_negative",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(inflow__gte=0),
+                name="ledger_inflow_non_negative",
+            ),
+        ]
+
     def __str__(self):
         return self.account.name
-
 
 class LedgerEntryAudit(models.Model):
     ledger_entry_id = models.IntegerField()
